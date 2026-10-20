@@ -249,6 +249,11 @@ class PlacesViewController: ArticleLocationCollectionViewController, UISearchBar
 
         locationManager.startMonitoringLocation()
         mapView.showsUserLocation = true
+
+        if let currentSearchRegion = currentSearchRegion {
+            mapView.setRegion(currentSearchRegion, animated: true)
+            self.currentSearchRegion = nil
+        }
     }
 
     override func viewDidAppear(_ animated: Bool) {
@@ -2098,6 +2103,15 @@ class PlacesViewController: ArticleLocationCollectionViewController, UISearchBar
         let displayTitle = article.displayTitle ?? title
         let searchResult = MWKSearchResult(articleID: 0, revID: 0, title: title, displayTitle: displayTitle, displayTitleHTML: displayTitleHTML, wikidataDescription: article.wikidataDescription, extract: article.snippet, thumbnailURL: article.thumbnailURL, index: nil, titleNamespace: nil, location: article.location)
         currentSearch = PlaceSearch(filter: .top, type: .location, origin: .user, sortStyle: .links, string: nil, region: region, localizedDescription: title, searchResult: searchResult, siteURL: articleURL.wmf_site)
+    }
+
+    @objc public func showCoordinates(_ coordinates: CLLocationCoordinate2D) {
+        let region = MKCoordinateRegion(center: coordinates, latitudinalMeters: 5000, longitudinalMeters: 5000)
+        if let mapView = mapView {
+            mapView.setRegion(region, animated: true)
+        } else {
+            currentSearchRegion = region
+        }
     }
 
     fileprivate func searchForFirstSearchSuggestion() {

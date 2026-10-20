@@ -4,6 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 typedef NS_ENUM(NSUInteger, WMFUserActivityType) {
     WMFUserActivityTypeHome,
     WMFUserActivityTypePlaces,
+    WMFUserActivityTypePlacesCoordinates,
     WMFUserActivityTypeSavedPages,
     WMFUserActivityTypeSearch,
     WMFUserActivityTypeSearchResults,
@@ -44,6 +45,8 @@ extern NSString *const WMFNavigateToActivityNotification;
 - (nullable NSString *)wmf_searchTerm;
 
 - (nullable NSURL *)wmf_linkURL;
+
+- (CLLocationCoordinate2D)wmf_coordinates;
 
 - (NSURL *)wmf_contentURL;
 

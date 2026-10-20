@@ -1,3 +1,4 @@
+#import <CoreLocation/CoreLocation.h>
 #import <WMF/NSUserActivity+WMFExtensions.h>
 #import <WMF/WMF-Swift.h>
 
@@ -74,6 +75,40 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
     return activity;
 }
 
++ (instancetype)wmf_placesActivityWithCoordinates:(NSURL *)activityURL {
+    NSURLComponents *components = [NSURLComponents componentsWithURL:activityURL resolvingAgainstBaseURL:NO];
+    NSArray *queryItems = components.queryItems;
+
+    if (queryItems.count != 2) {
+        NSUserActivity *activity = [self wmf_pageActivityWithName:@"Places_Coordinates"];
+        return activity;
+    }
+
+    double latitude = 0;
+    double longitude = 0;
+
+    for (NSURLQueryItem *item in components.queryItems) {
+        if ([item.name isEqualToString:@"lat"]) {
+            latitude = item.value.doubleValue;
+        }
+
+        if ([item.name isEqualToString:@"lon"]) {
+            longitude = item.value.doubleValue;
+        }
+    }
+
+    NSUserActivity *activity = [self wmf_activityWithType:@"Places_Coordinates"];
+    activity.userInfo = @{
+        @"WMFPage": @"Places_Coordinates",
+        @"WMFCoordinates": @{
+            @"latitude": @(latitude),
+            @"longitude": @(longitude)
+        }
+    };
+
+    return activity;
+}
+
 // The page name stays "Explore": it is the activity type of Handoff and Spotlight activities that
 // already exist on devices, and of the wikipedia://explore link.
 + (instancetype)wmf_homeViewActivity {
@@ -112,8 +147,12 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
 }
 
 + (nullable instancetype)wmf_activityForWikipediaScheme:(NSURL *)url {
-    if (![url.scheme isEqualToString:@"wikipedia"] && ![url.scheme isEqualToString:@"wikipedia-official"]) {
+    if (![url.scheme isEqualToString:@"wikipedia"] && ![url.scheme isEqualToString:@"wikipedia-official"] && ![url.scheme isEqualToString:@"wikipedia-clone"]) {
         return nil;
+    }
+
+    if ([url.scheme isEqualToString:@"wikipedia-clone"]) {
+        return [self wmf_placesActivityWithCoordinates:url];
     }
 
     if ([url.host isEqualToString:@"content"]) {
@@ -236,6 +275,8 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
             return WMFUserActivityTypeHome;
         } else if ([page isEqualToString:@"Places"]) {
             return WMFUserActivityTypePlaces;
+        } else if ([page isEqualToString:@"Places_Coordinates"]) {
+            return WMFUserActivityTypePlacesCoordinates;
         } else if ([page isEqualToString:@"Saved"]) {
             return WMFUserActivityTypeSavedPages;
         } else if ([page isEqualToString:@"Search"]) {
@@ -285,6 +326,12 @@ __attribute__((annotate("returns_localized_nsstring"))) static inline NSString *
     } else {
         return self.webpageURL;
     }
+}
+
+- (CLLocationCoordinate2D)wmf_coordinates {
+    NSDictionary *coordinateInfo = self.userInfo[@"WMFCoordinates"];
+    return CLLocationCoordinate2DMake([coordinateInfo[@"latitude"] doubleValue],
+                                      [coordinateInfo[@"longitude"] doubleValue]);
 }
 
 - (NSURL *)wmf_contentURL {

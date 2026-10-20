@@ -1282,7 +1282,7 @@ final class WMFAppViewController: UITabBarController, AppTabBarDelegate {
     private func canProcessUserActivity(_ activity: NSUserActivity?) -> Bool {
         guard let activity else { return false }
         switch activity.wmf_type() {
-        case .home, .places, .savedPages, .search, .settings, .appearanceSettings, .content, .activity, .random:
+        case .home, .places, .placesCoordinates, .savedPages, .search, .settings, .appearanceSettings, .content, .activity, .random:
             return true
         case .searchResults:
             return activity.wmf_searchTerm() != nil
@@ -1327,6 +1327,14 @@ final class WMFAppViewController: UITabBarController, AppTabBarDelegate {
                 placesViewController.updateViewModeToMap()
                 placesViewController.showArticleURL(articleURL)
             }
+
+        case .placesCoordinates:
+            dismissPresentedViewControllers()
+            selectedIndex = WMFAppTabType.places.rawValue
+            currentTabNavigationController?.popToRootViewController(animated: animated)
+            let coordinates = activity.wmf_coordinates()
+            placesViewController.updateViewModeToMap()
+            placesViewController.showCoordinates(coordinates)
 
         case .random:
             dismissPresentedViewControllers()
