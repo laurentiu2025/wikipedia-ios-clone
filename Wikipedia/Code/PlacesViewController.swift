@@ -237,6 +237,16 @@ class PlacesViewController: ArticleLocationCollectionViewController, UISearchBar
             defaults.wmf_setPlacesHasAppeared(true)
         }
 
+        let showCurrentSearchRegionIfNeeded = { [weak self] in
+            guard let self = self,
+                  let currentSearchRegion = currentSearchRegion else {
+                return
+            }
+
+            mapView.setRegion(currentSearchRegion, animated: true)
+            self.currentSearchRegion = nil
+        }
+
         guard locationManager.isAuthorized else {
             if !defaults.wmf_placesDidPromptForLocationAuthorization() {
                 defaults.wmf_setPlacesDidPromptForLocationAuthorization(true)
@@ -244,16 +254,15 @@ class PlacesViewController: ArticleLocationCollectionViewController, UISearchBar
             } else {
                 performDefaultSearchOnNextMapRegionUpdate = currentSearch == nil
             }
+
+            showCurrentSearchRegionIfNeeded()
             return
         }
 
         locationManager.startMonitoringLocation()
         mapView.showsUserLocation = true
 
-        if let currentSearchRegion = currentSearchRegion {
-            mapView.setRegion(currentSearchRegion, animated: true)
-            self.currentSearchRegion = nil
-        }
+        showCurrentSearchRegionIfNeeded()
     }
 
     override func viewDidAppear(_ animated: Bool) {
